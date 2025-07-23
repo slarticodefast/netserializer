@@ -13,7 +13,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Diagnostics;
 using System.Text;
 using NetSerializer.TypeSerializers;
 
