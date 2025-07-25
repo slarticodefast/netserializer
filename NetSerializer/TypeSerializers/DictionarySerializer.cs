@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright 2015 Tomi Valkeinen
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -8,11 +8,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace NetSerializer
 {
@@ -25,7 +25,7 @@ namespace NetSerializer
 
 			var genTypeDef = type.GetGenericTypeDefinition();
 
-			return genTypeDef == typeof(Dictionary<,>);
+			return genTypeDef == typeof(Dictionary<,>) || genTypeDef == typeof(ImmutableDictionary<,>);
 		}
 
 		public IEnumerable<Type> GetSubtypes(Type type)
@@ -48,7 +48,7 @@ namespace NetSerializer
 
 			var genTypeDef = type.GetGenericTypeDefinition();
 
-			Debug.Assert(genTypeDef == typeof(Dictionary<,>));
+			Debug.Assert(genTypeDef == typeof(Dictionary<,>) || genTypeDef == typeof(ImmutableDictionary<,>));
 
 			var containerType = this.GetType();
 
@@ -70,7 +70,7 @@ namespace NetSerializer
 
 			var genTypeDef = type.GetGenericTypeDefinition();
 
-			Debug.Assert(genTypeDef == typeof(Dictionary<,>));
+			Debug.Assert(genTypeDef == typeof(Dictionary<,>) || genTypeDef == typeof(ImmutableDictionary<,>));
 
 			var containerType = this.GetType();
 
@@ -153,7 +153,7 @@ namespace NetSerializer
 				serializer.Serialize(stream, null);
 				return;
 			}
-			
+
 			var kvpArray = new KeyValuePair<TKey, TValue>[value.Count];
 
 			int i = 0;
@@ -177,6 +177,18 @@ namespace NetSerializer
 
 			foreach (var kvp in kvpArray)
 				value.Add(kvp.Key, kvp.Value);
+		}
+
+		public static void ReadPrimitiveImmutable<TKey, TValue>(Serializer serializer, Stream stream, out ImmutableDictionary<TKey, TValue> value)
+		{
+			ReadPrimitive<TKey, TValue>(serializer, stream, out var builder);
+			if (builder == null)
+			{
+				value = null;
+				return;
+			}
+
+			value = builder.ToImmutableDictionary();
 		}
 	}
 }
