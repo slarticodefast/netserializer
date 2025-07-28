@@ -13,7 +13,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 
 namespace NetSerializer
 {
@@ -114,7 +113,7 @@ namespace NetSerializer
 
 			// Create a trampoline
 
-			var wrapper = Helpers.GenerateDynamicSerializerStub(paramType);
+			var wrapper = GenerateDynamicSerializerStub(paramType);
 			var il = wrapper.GetILGenerator();
 
 			if (needsInstanceParameter)
@@ -233,10 +232,10 @@ namespace NetSerializer
 			return null;
 		}
 
-		public static MethodInfo GetGenWriter(Type containerType, Type genType)
+		public static MethodInfo GetGenWriter(Type containerType, Type genType, string methodName = "WritePrimitive")
 		{
 			var mis = containerType.GetMethods(BindingFlags.Static | BindingFlags.Public)
-				.Where(mi => mi.IsGenericMethod && mi.Name == "WritePrimitive");
+				.Where(mi => mi.IsGenericMethod && mi.Name == methodName);
 
 			foreach (var mi in mis)
 			{
