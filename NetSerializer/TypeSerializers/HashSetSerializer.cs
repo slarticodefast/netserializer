@@ -37,7 +37,7 @@ namespace NetSerializer.TypeSerializers
 
             var containerType = GetType();
 
-            var reader = containerType.GetMethod("WritePrimitive", BindingFlags.Static | BindingFlags.Public);
+            var reader = Helpers.GetGenWriter(containerType, genTypeDef);
 
             var genArgs = type.GetGenericArguments();
 
@@ -59,7 +59,7 @@ namespace NetSerializer.TypeSerializers
 
             var containerType = GetType();
 
-            var reader = containerType.GetMethod("ReadPrimitive", BindingFlags.Static | BindingFlags.Public);
+            var reader = Helpers.GetGenReader(containerType, genTypeDef);
 
             var genArgs = type.GetGenericArguments();
 
@@ -68,7 +68,7 @@ namespace NetSerializer.TypeSerializers
             return reader;
         }
 
-        public static void WritePrimitive<T>(Serializer serializer, Stream stream, HashSet<T> value)
+        public static void BaseWritePrimitive<T>(Serializer serializer, Stream stream, IReadOnlySet<T> value)
         {
             if (value == null)
             {
@@ -83,6 +83,16 @@ namespace NetSerializer.TypeSerializers
                 array[i++] = t;
 
             serializer.Serialize(stream, array);
+        }
+
+        public static void WritePrimitive<T>(Serializer serializer, Stream stream, HashSet<T> value)
+        {
+	        BaseWritePrimitive(serializer, stream, value);
+        }
+
+        public static void WritePrimitive<T>(Serializer serializer, Stream stream, ImmutableHashSet<T> value)
+        {
+	        BaseWritePrimitive(serializer, stream, value);
         }
 
         public static void ReadPrimitive<T>(Serializer serializer, Stream stream, out HashSet<T> value)
@@ -101,9 +111,9 @@ namespace NetSerializer.TypeSerializers
                 value.Add(t);
         }
 
-        public static void ReadPrimitiveImmutable<T>(Serializer serializer, Stream stream, out ImmutableHashSet<T> value)
+        public static void ReadPrimitive<T>(Serializer serializer, Stream stream, out ImmutableHashSet<T> value)
         {
-	        ReadPrimitive<T>(serializer, stream, out var builder);
+	        ReadPrimitive(serializer, stream, out HashSet<T> builder);
 	        if (builder == null)
 	        {
 		        value = null;

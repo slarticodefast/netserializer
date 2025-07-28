@@ -52,7 +52,7 @@ namespace NetSerializer
 
 			var containerType = this.GetType();
 
-			var writer = GetGenWriter(containerType, genTypeDef);
+			var writer = Helpers.GetGenWriter(containerType, genTypeDef);
 
 			var genArgs = type.GetGenericArguments();
 
@@ -74,7 +74,7 @@ namespace NetSerializer
 
 			var containerType = this.GetType();
 
-			var reader = GetGenReader(containerType, genTypeDef);
+			var reader = Helpers.GetGenReader(containerType, genTypeDef);
 
 			var genArgs = type.GetGenericArguments();
 
@@ -83,70 +83,7 @@ namespace NetSerializer
 			return reader;
 		}
 
-		static MethodInfo GetGenWriter(Type containerType, Type genType)
-		{
-			var mis = containerType.GetMethods(BindingFlags.Static | BindingFlags.Public)
-				.Where(mi => mi.IsGenericMethod && mi.Name == "WritePrimitive");
-
-			foreach (var mi in mis)
-			{
-				var p = mi.GetParameters();
-
-				if (p.Length != 3)
-					continue;
-
-				if (p[1].ParameterType != typeof(Stream))
-					continue;
-
-				var paramType = p[2].ParameterType;
-
-				if (paramType.IsGenericType == false)
-					continue;
-
-				var genParamType = paramType.GetGenericTypeDefinition();
-
-				if (genType == genParamType)
-					return mi;
-			}
-
-			return null;
-		}
-
-		static MethodInfo GetGenReader(Type containerType, Type genType)
-		{
-			var mis = containerType.GetMethods(BindingFlags.Static | BindingFlags.Public)
-				.Where(mi => mi.IsGenericMethod && mi.Name == "ReadPrimitive");
-
-			foreach (var mi in mis)
-			{
-				var p = mi.GetParameters();
-
-				if (p.Length != 3)
-					continue;
-
-				if (p[1].ParameterType != typeof(Stream))
-					continue;
-
-				var paramType = p[2].ParameterType;
-
-				if (paramType.IsByRef == false)
-					continue;
-
-				paramType = paramType.GetElementType();
-
-				if (paramType.IsGenericType == false)
-					continue;
-
-				var genParamType = paramType.GetGenericTypeDefinition();
-
-				if (genType == genParamType)
-					return mi;
-			}
-
-			return null;
-		}
-
-		public static void WritePrimitive<TKey, TValue>(Serializer serializer, Stream stream, Dictionary<TKey, TValue> value)
+		private static void BaseWritePrimitive<TKey, TValue>(Serializer serializer, Stream stream, IReadOnlyDictionary<TKey, TValue> value)
 		{
 			if (value == null)
 			{
@@ -161,6 +98,16 @@ namespace NetSerializer
 				kvpArray[i++] = kvp;
 
 			serializer.Serialize(stream, kvpArray);
+		}
+
+		public static void WritePrimitive<TKey, TValue>(Serializer serializer, Stream stream, Dictionary<TKey, TValue> value)
+		{
+			BaseWritePrimitive(serializer, stream, value);
+		}
+
+		public static void WritePrimitive<TKey, TValue>(Serializer serializer, Stream stream, ImmutableDictionary<TKey, TValue> value)
+		{
+			BaseWritePrimitive(serializer, stream, value);
 		}
 
 		public static void ReadPrimitive<TKey, TValue>(Serializer serializer, Stream stream, out Dictionary<TKey, TValue> value)
@@ -179,9 +126,9 @@ namespace NetSerializer
 				value.Add(kvp.Key, kvp.Value);
 		}
 
-		public static void ReadPrimitiveImmutable<TKey, TValue>(Serializer serializer, Stream stream, out ImmutableDictionary<TKey, TValue> value)
+		public static void ReadPrimitive<TKey, TValue>(Serializer serializer, Stream stream, out ImmutableDictionary<TKey, TValue> value)
 		{
-			ReadPrimitive<TKey, TValue>(serializer, stream, out var builder);
+			ReadPrimitive(serializer, stream, out Dictionary<TKey, TValue> builder);
 			if (builder == null)
 			{
 				value = null;
