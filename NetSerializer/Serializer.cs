@@ -8,14 +8,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Security.Cryptography;
+using System.Diagnostics;
 using System.Text;
-using System.Threading;
 using NetSerializer.TypeSerializers;
 
 namespace NetSerializer
@@ -67,7 +65,7 @@ namespace NetSerializer
 
 				AddTypesInternal(new Dictionary<Type, uint>()
 				{
-					{ typeof(object), ObjectTypeId }
+					{ typeof(object), Serializer.ObjectTypeId }
 				});
 
 				AddTypesInternal(rootTypes);
@@ -105,7 +103,7 @@ namespace NetSerializer
 
 				AddTypesInternal(new Dictionary<Type, uint>()
 				{
-					{ typeof(object), ObjectTypeId }
+					{ typeof(object), Serializer.ObjectTypeId }
 				});
 
 				AddTypesInternal(typeMap);
@@ -294,7 +292,7 @@ namespace NetSerializer
 
 			stream.Position = 0;
 
-			using var sha256 = SHA256.Create();
+			using var sha256 = System.Security.Cryptography.SHA256.Create();
 			var bytes = sha256.ComputeHash(stream);
 
 			return Convert.ToHexString(bytes);
@@ -318,7 +316,7 @@ namespace NetSerializer
 		[Conditional("DEBUG")]
 		void AssertLocked()
 		{
-			Debug.Assert(Monitor.IsEntered(m_modifyLock));
+			Debug.Assert(System.Threading.Monitor.IsEntered(m_modifyLock));
 		}
 
 		public void Serialize(Stream stream, object ob)
